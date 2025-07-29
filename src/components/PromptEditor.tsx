@@ -1,5 +1,6 @@
 import { Copy, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const PromptEditor = () => {
 	const [originalPrompt, setOriginalPrompt] = useState("");
@@ -85,8 +86,10 @@ const PromptEditor = () => {
 		
 		try {
 			await navigator.clipboard.writeText(generatedPrompt);
+			toast.success("Prompt copied to clipboard!");
 		} catch (err) {
 			console.error('Failed to copy text: ', err);
+			toast.error("Failed to copy prompt to clipboard");
 		}
 	};
 
