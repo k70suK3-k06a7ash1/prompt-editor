@@ -25,22 +25,26 @@ const PromptEditor = () => {
     const uniqueVariables = Array.from(foundVariables);
     setVariables(uniqueVariables);
 
-    // Initialize variable values for new variables
-    const newVariableValues = { ...variableValues };
-    uniqueVariables.forEach(variable => {
-      if (!(variable in newVariableValues)) {
-        newVariableValues[variable] = '';
-      }
-    });
+    // Initialize variable values for new variables and remove old ones
+    setVariableValues(prev => {
+      const newVariableValues = { ...prev };
+      
+      // Add new variables
+      uniqueVariables.forEach(variable => {
+        if (!(variable in newVariableValues)) {
+          newVariableValues[variable] = '';
+        }
+      });
 
-    // Remove values for variables that no longer exist
-    Object.keys(newVariableValues).forEach(variable => {
-      if (!uniqueVariables.includes(variable)) {
-        delete newVariableValues[variable];
-      }
-    });
+      // Remove values for variables that no longer exist
+      Object.keys(newVariableValues).forEach(variable => {
+        if (!uniqueVariables.includes(variable)) {
+          delete newVariableValues[variable];
+        }
+      });
 
-    setVariableValues(newVariableValues);
+      return newVariableValues;
+    });
   }, [originalPrompt]);
 
   // Generate the final prompt by replacing variables with their values
