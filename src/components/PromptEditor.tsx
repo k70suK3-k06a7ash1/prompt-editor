@@ -81,9 +81,10 @@ const PromptEditor = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 font-inter">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Editor</h1>
+
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Editor</h1>
           <p className="text-gray-600">Extract variables from your prompt and generate customized output</p>
         </div>
 
