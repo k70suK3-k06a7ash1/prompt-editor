@@ -10,7 +10,7 @@ Language: TypeScript
 Technology Stack
 Framework: React (using Vite)
 
-Styling: Tailwind CSS
+Styling: Tailwind CSS V4
 
 Icons: Lucide React (if necessary)
 
