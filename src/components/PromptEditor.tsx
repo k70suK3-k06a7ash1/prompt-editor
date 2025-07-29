@@ -18,8 +18,9 @@ const PromptEditor = () => {
 
 		const regex = /\$\{(\w+)\}/g;
 		const foundVariables = new Set<string>();
-		let match;
+		let match : RegExpExecArray | null;
 
+		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
 		while ((match = regex.exec(originalPrompt)) !== null) {
 			foundVariables.add(match[1]);
 		}
