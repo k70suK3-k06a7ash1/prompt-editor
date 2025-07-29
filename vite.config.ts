@@ -4,6 +4,12 @@ import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 // https://vite.dev/config/
 export default defineConfig({
+    optimizeDeps: {
+    exclude: ['@electric-sql/pglite'],
+  },
+    worker: {
+    format: 'es',
+  },
   plugins: [react(), tailwindcss()],
   base: '/prompt-editor/',
   build: {
