@@ -152,10 +152,11 @@ const PromptEditor = () => {
 		"Hello, my name is ${name}. I am ${age} years old and I work as a ${job}. I live in ${city}.";
 
 	return (
-		<div className="min-h-screen bg-gray-50 py-8 px-4 font-inter">
-			<h1 className="text-3xl font-bold text-gray-900 mb-2">Prompt Editor</h1>
+		<div className="min-h-screen min-w-screen bg-gray-50 py-8 px-4 font-inter">
 
 			<div className="max-w-4xl mx-auto">
+							<h1 className="text-center text-3xl font-bold text-gray-900 mb-2 mx-auto">Prompt Editor</h1>
+
 				<div className="mb-8 text-center">
 					<p className="text-gray-600">
 						Extract variables from your prompt and generate customized output
