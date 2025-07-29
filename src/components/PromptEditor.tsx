@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const PromptEditor = () => {
 	const [originalPrompt, setOriginalPrompt] = useState("");
