@@ -1,7 +1,7 @@
-import PromptEditor from './components/PromptEditor'
+import PromptEditor from "./components/PromptEditor";
 
 function App() {
-  return <PromptEditor />
+	return <PromptEditor />;
 }
 
-export default App
+export default App;
