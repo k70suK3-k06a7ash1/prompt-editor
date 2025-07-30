@@ -2,15 +2,9 @@ import { Copy, RotateCcw, Save, History, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { usePGlite, useLiveQuery } from "@electric-sql/pglite-react";
+import type { PromptVersion } from "@/types";
 
-interface PromptVersion {
-	id: number;
-	title: string;
-	original_prompt: string;
-	variable_values: Record<string, string>;
-	created_at: string;
-	updated_at: string;
-}
+
 
 const PromptEditor = () => {
 	const db = usePGlite();
