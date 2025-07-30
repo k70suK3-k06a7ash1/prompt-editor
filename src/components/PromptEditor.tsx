@@ -92,8 +92,8 @@ const PromptEditor = () => {
 		"Hello, my name is $\{name}. I am $\{age} years old and I work as a $\{job}. I live in $\{city}.";
 
 	return (
-		<div className="min-h-screen w-full bg-gray-50 py-4 sm:py-8 px-4 sm:px-6 lg:px-8 font-inter">
-			<div className="max-w-7xl mx-auto">
+		<div className="min-h-screen w-full bg-gray-50 py-4 sm:py-8 px-3 sm:px-6 lg:px-8 font-inter overflow-x-hidden">
+			<div className="max-w-4xl mx-auto w-full">
 				<h1 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-2 mx-auto">
 					Prompt Editor
 				</h1>
@@ -107,20 +107,20 @@ const PromptEditor = () => {
 				<div className="space-y-8">
 					{/* Save Prompt Section */}
 					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-						<div className="space-y-4 sm:space-y-0 sm:flex sm:gap-4 sm:items-center">
+						<div className="space-y-3 sm:space-y-0 sm:flex sm:gap-3 sm:items-center">
 							<input
 								type="text"
 								value={promptTitle}
 								onChange={(e) => setPromptTitle(e.target.value)}
 								placeholder="Enter prompt title (optional)"
-								className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
 							/>
-							<div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+							<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 shrink-0">
 								<button
 									type="button"
 									onClick={savePrompt}
 									disabled={!originalPrompt.trim()}
-									className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+									className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
 								>
 									<Save size={16} />
 									Save Prompt
@@ -128,7 +128,7 @@ const PromptEditor = () => {
 								<button
 									type="button"
 									onClick={() => setShowHistory(!showHistory)}
-									className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+									className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
 								>
 									<History size={16} />
 									{showHistory ? "Hide" : "Show"} History
@@ -202,7 +202,7 @@ const PromptEditor = () => {
 							<button
 								type="button"
 								onClick={resetPrompt}
-								className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap self-start sm:self-auto"
+								className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap self-start sm:self-auto"
 							>
 								<RotateCcw size={16} />
 								Reset Prompt
