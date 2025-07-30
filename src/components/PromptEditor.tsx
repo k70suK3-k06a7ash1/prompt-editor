@@ -1,9 +1,10 @@
 import { Copy, RotateCcw, Save, History, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { usePGlite, useLiveQuery } from "@electric-sql/pglite-react";
 import type { PromptVersion } from "@/types";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
+import { useGeneratePrompt } from "@/hooks/use-generate-prompt";
 
 const PromptEditor = () => {
 	const db = usePGlite();
@@ -21,23 +22,8 @@ const PromptEditor = () => {
 		"SELECT * FROM prompt_versions ORDER BY created_at DESC",
 	);
 
-	useExtractVariables({originalPrompt, setVariables, setVariableValues})
-
-	// Generate the final prompt by replacing variables with their values
-	useEffect(() => {
-		if (!originalPrompt) {
-			setGeneratedPrompt("");
-			return;
-		}
-
-		let result = originalPrompt;
-		Object.entries(variableValues).forEach(([variable, value]) => {
-			const regex = new RegExp(`\\$\\{${variable}\\}`, "g");
-			result = result.replace(regex, value || `\${${variable}}`);
-		});
-
-		setGeneratedPrompt(result);
-	}, [originalPrompt, variableValues]);
+	useExtractVariables({originalPrompt, setVariables, setVariableValues});
+	useGeneratePrompt({originalPrompt, variableValues, setGeneratedPrompt});
 
 	const handleVariableChange = (variable: string, value: string) => {
 		setVariableValues((prev) => ({
