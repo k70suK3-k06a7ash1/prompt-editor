@@ -5,8 +5,6 @@ import { usePGlite, useLiveQuery } from "@electric-sql/pglite-react";
 import type { PromptVersion } from "@/types";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
 
-
-
 const PromptEditor = () => {
 	const db = usePGlite();
 	const [originalPrompt, setOriginalPrompt] = useState("");
