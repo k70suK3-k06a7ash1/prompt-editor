@@ -89,7 +89,7 @@ const PromptEditor = () => {
 	};
 
 	const examplePrompt =
-		"Hello, my name is ${name}. I am ${age} years old and I work as a ${job}. I live in ${city}.";
+		"Hello, my name is $\{name}. I am $\{age} years old and I work as a $\{job}. I live in $\{city}.";
 
 	return (
 		<div className="min-h-screen min-w-screen bg-gray-50 py-8 px-4 font-inter">
