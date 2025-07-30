@@ -104,7 +104,7 @@ const PromptEditor = () => {
 					</p>
 				</div>
 
-				<div className="space-y-8">
+				<div className="space-y-6 sm:space-y-8 w-full">
 					{/* Save Prompt Section */}
 					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
 						<div className="space-y-3 sm:space-y-0 sm:flex sm:gap-3 sm:items-center">
