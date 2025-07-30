@@ -1,10 +1,10 @@
-import { Copy, RotateCcw, Save, History, Trash2 } from "lucide-react";
+import { useLiveQuery, usePGlite } from "@electric-sql/pglite-react";
+import { Copy, History, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { usePGlite, useLiveQuery } from "@electric-sql/pglite-react";
-import type { PromptVersion } from "@/types";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
 import { useGeneratePrompt } from "@/hooks/use-generate-prompt";
+import type { PromptVersion } from "@/types";
 
 const PromptEditor = () => {
 	const db = usePGlite();
@@ -22,8 +22,8 @@ const PromptEditor = () => {
 		"SELECT * FROM prompt_versions ORDER BY created_at DESC",
 	);
 
-	useExtractVariables({originalPrompt, setVariables, setVariableValues});
-	useGeneratePrompt({originalPrompt, variableValues, setGeneratedPrompt});
+	useExtractVariables({ originalPrompt, setVariables, setVariableValues });
+	useGeneratePrompt({ originalPrompt, variableValues, setGeneratedPrompt });
 
 	const handleVariableChange = (variable: string, value: string) => {
 		setVariableValues((prev) => ({
@@ -41,12 +41,12 @@ const PromptEditor = () => {
 
 	const copyToClipboard = async () => {
 		if (!generatedPrompt) return;
-		
+
 		try {
 			await navigator.clipboard.writeText(generatedPrompt);
 			toast.success("Prompt copied to clipboard!");
 		} catch (err) {
-			console.error('Failed to copy text: ', err);
+			console.error("Failed to copy text: ", err);
 			toast.error("Failed to copy prompt to clipboard");
 		}
 	};
@@ -58,16 +58,16 @@ const PromptEditor = () => {
 		}
 
 		const title = promptTitle.trim() || `Prompt ${new Date().toLocaleString()}`;
-		
+
 		try {
 			await db.query(
 				"INSERT INTO prompt_versions (title, original_prompt, variable_values) VALUES ($1, $2, $3)",
-				[title, originalPrompt, JSON.stringify(variableValues)]
+				[title, originalPrompt, JSON.stringify(variableValues)],
 			);
 			toast.success("Prompt saved successfully!");
 			setPromptTitle("");
 		} catch (err) {
-			console.error('Failed to save prompt:', err);
+			console.error("Failed to save prompt:", err);
 			toast.error("Failed to save prompt");
 		}
 	};
@@ -83,7 +83,7 @@ const PromptEditor = () => {
 			await db.query("DELETE FROM prompt_versions WHERE id = $1", [id]);
 			toast.success(`Deleted: ${title}`);
 		} catch (err) {
-			console.error('Failed to delete prompt:', err);
+			console.error("Failed to delete prompt:", err);
 			toast.error("Failed to delete prompt");
 		}
 	};
@@ -92,68 +92,76 @@ const PromptEditor = () => {
 		"Hello, my name is $\{name}. I am $\{age} years old and I work as a $\{job}. I live in $\{city}.";
 
 	return (
-		<div className="min-h-screen min-w-screen bg-gray-50 py-8 px-4 font-inter">
+		<div className="min-h-screen w-full bg-gray-50 py-4 sm:py-8 px-4 sm:px-6 lg:px-8 font-inter">
+			<div className="max-w-7xl mx-auto">
+				<h1 className="text-center text-2xl sm:text-3xl font-bold text-gray-900 mb-2 mx-auto">
+					Prompt Editor
+				</h1>
 
-			<div className="max-w-4xl mx-auto">
-							<h1 className="text-center text-3xl font-bold text-gray-900 mb-2 mx-auto">Prompt Editor</h1>
-
-				<div className="mb-8 text-center">
-					<p className="text-gray-600">
+				<div className="mb-6 sm:mb-8 text-center">
+					<p className="text-sm sm:text-base text-gray-600">
 						Extract variables from your prompt and generate customized output
 					</p>
 				</div>
 
 				<div className="space-y-8">
 					{/* Save Prompt Section */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-						<div className="flex gap-4 items-center">
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+						<div className="space-y-4 sm:space-y-0 sm:flex sm:gap-4 sm:items-center">
 							<input
 								type="text"
 								value={promptTitle}
 								onChange={(e) => setPromptTitle(e.target.value)}
 								placeholder="Enter prompt title (optional)"
-								className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+								className="w-full sm:flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 							/>
-							<button
-								type="button"
-								onClick={savePrompt}
-								disabled={!originalPrompt.trim()}
-								className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								<Save size={16} />
-								Save Prompt
-							</button>
-							<button
-								type="button"
-								onClick={() => setShowHistory(!showHistory)}
-								className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-							>
-								<History size={16} />
-								{showHistory ? 'Hide' : 'Show'} History
-							</button>
+							<div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+								<button
+									type="button"
+									onClick={savePrompt}
+									disabled={!originalPrompt.trim()}
+									className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+								>
+									<Save size={16} />
+									Save Prompt
+								</button>
+								<button
+									type="button"
+									onClick={() => setShowHistory(!showHistory)}
+									className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+								>
+									<History size={16} />
+									{showHistory ? "Hide" : "Show"} History
+								</button>
+							</div>
 						</div>
 					</div>
 
 					{/* History Section */}
 					{showHistory && (
-						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-							<h2 className="text-lg font-semibold text-gray-900 mb-4">
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+							<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
 								Prompt History ({promptVersions?.rows?.length || 0})
 							</h2>
 							{promptVersions?.rows && promptVersions.rows.length > 0 ? (
-								<div className="space-y-3 max-h-64 overflow-y-auto">
+								<div className="space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
 									{promptVersions.rows.map((version: PromptVersion) => (
-										<div key={version.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-											<div className="flex-1">
-												<h3 className="font-medium text-gray-900">{version.title}</h3>
-												<p className="text-sm text-gray-500 truncate max-w-md">
+										<div
+											key={version.id}
+											className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-md gap-3 sm:gap-0"
+										>
+											<div className="flex-1 min-w-0">
+												<h3 className="font-medium text-gray-900 truncate">
+													{version.title}
+												</h3>
+												<p className="text-sm text-gray-500 truncate">
 													{version.original_prompt}
 												</p>
 												<p className="text-xs text-gray-400">
 													{new Date(version.created_at).toLocaleString()}
 												</p>
 											</div>
-											<div className="flex gap-2 ml-4">
+											<div className="flex gap-2 shrink-0">
 												<button
 													type="button"
 													onClick={() => loadPromptVersion(version)}
@@ -163,7 +171,9 @@ const PromptEditor = () => {
 												</button>
 												<button
 													type="button"
-													onClick={() => deletePromptVersion(version.id, version.title)}
+													onClick={() =>
+														deletePromptVersion(version.id, version.title)
+													}
 													className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors"
 												>
 													<Trash2 size={12} />
@@ -173,24 +183,26 @@ const PromptEditor = () => {
 									))}
 								</div>
 							) : (
-								<p className="text-gray-500 text-center py-4">No saved prompts yet</p>
+								<p className="text-gray-500 text-center py-4">
+									No saved prompts yet
+								</p>
 							)}
 						</div>
 					)}
 
 					{/* Prompt Input Section */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-						<div className="flex justify-between items-center mb-4">
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
 							<label
 								htmlFor="original-prompt"
-								className="block text-lg font-semibold text-gray-900"
+								className="block text-base sm:text-lg font-semibold text-gray-900"
 							>
 								System Prompt
 							</label>
 							<button
-              type="button"
+								type="button"
 								onClick={resetPrompt}
-								className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+								className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap self-start sm:self-auto"
 							>
 								<RotateCcw size={16} />
 								Reset Prompt
@@ -201,10 +213,10 @@ const PromptEditor = () => {
 							value={originalPrompt}
 							onChange={(e) => setOriginalPrompt(e.target.value)}
 							placeholder={examplePrompt}
-							className="w-full h-32 px-4 py-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+							className="w-full h-32 sm:h-40 px-3 sm:px-4 py-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
 							rows={4}
 						/>
-						<p className="mt-2 text-sm text-gray-500">
+						<p className="mt-2 text-xs sm:text-sm text-gray-500">
 							Enter your prompt with variables in the format: $
 							{`{variableName}`}
 						</p>
@@ -212,11 +224,11 @@ const PromptEditor = () => {
 
 					{/* Variable Input Section */}
 					{variables.length > 0 && (
-						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-							<h2 className="text-lg font-semibold text-gray-900 mb-4">
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+							<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
 								Variables ({variables.length})
 							</h2>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 								{variables.map((variable) => (
 									<div key={variable} className="space-y-2">
 										<label
@@ -232,7 +244,7 @@ const PromptEditor = () => {
 											onChange={(e) =>
 												handleVariableChange(variable, e.target.value)
 											}
-											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
 											placeholder={`Enter value for ${variable}`}
 										/>
 									</div>
@@ -242,23 +254,23 @@ const PromptEditor = () => {
 					)}
 
 					{/* Generated Prompt Section */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-						<div className="flex justify-between items-center mb-4">
-							<h2 className="text-lg font-semibold text-gray-900">
+					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
+							<h2 className="text-base sm:text-lg font-semibold text-gray-900">
 								Generated Prompt
 							</h2>
 							<button
 								type="button"
 								onClick={copyToClipboard}
 								disabled={!generatedPrompt}
-								className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start sm:self-auto"
 							>
 								<Copy size={16} />
 								Copy
 							</button>
 						</div>
-						<div className="bg-gray-50 rounded-md p-4 min-h-[120px] border border-gray-200">
-							<pre className="whitespace-pre-wrap text-sm text-gray-900 font-mono leading-relaxed">
+						<div className="bg-gray-50 rounded-md p-3 sm:p-4 min-h-[120px] sm:min-h-[150px] border border-gray-200">
+							<pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-900 font-mono leading-relaxed">
 								{generatedPrompt ||
 									(originalPrompt
 										? "Enter values for variables to see the generated prompt..."
