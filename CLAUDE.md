@@ -15,12 +15,19 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
 - `npm run test` - Run Vitest tests
 - `npm run test:ui` - Run Vitest with UI
 - `npm run test:run` - Run tests once without watch mode
+- `npm run test:coverage` - Run tests with coverage report
 
 ### Code Quality Tools
 - `make format` - Format code with Biome
 - `make lint` - Lint and fix code with Biome
 - `make check` - Run Biome formatter and linter together
 - `make push` - Git add, commit with "chore" message, and push
+
+### GitHub Actions Testing (Local)
+- `make act-test` - Run GitHub Actions test workflow locally
+- `make act-test-verbose` - Run with verbose output for debugging
+- `make act-list` - List all available GitHub Actions jobs
+- `make act-dry` - Perform a dry run without executing
 
 ## Architecture
 
@@ -83,3 +90,5 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
 - Build output goes to `dist/` with base path `/prompt-editor/`
 - Biome configured with tab indentation and double quotes
 - PGlite requires special Vite optimization exclusion
+- Lefthook configuration available but currently contains only examples
+- Uses act for local GitHub Actions testing (requires Docker)
