@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { usePGlite, useLiveQuery } from "@electric-sql/pglite-react";
 import type { PromptVersion } from "@/types";
+import { useExtractVariables } from "@/hooks/use-extract-variables";
 
 
 
@@ -22,46 +23,48 @@ const PromptEditor = () => {
 		"SELECT * FROM prompt_versions ORDER BY created_at DESC",
 	);
 
-	// Extract variables from the prompt using regex
-	useEffect(() => {
-		if (!originalPrompt) {
-			setVariables([]);
-			return;
-		}
+	useExtractVariables({originalPrompt, setVariables, setVariableValues})
 
-		const regex = /\$\{(\w+)\}/g;
-		const foundVariables = new Set<string>();
-		let match : RegExpExecArray | null;
+	// // Extract variables from the prompt using regex
+	// useEffect(() => {
+	// 	if (!originalPrompt) {
+	// 		setVariables([]);
+	// 		return;
+	// 	}
 
-		// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-		while ((match = regex.exec(originalPrompt)) !== null) {
-			foundVariables.add(match[1]);
-		}
+	// 	const regex = /\$\{(\w+)\}/g;
+	// 	const foundVariables = new Set<string>();
+	// 	let match : RegExpExecArray | null;
 
-		const uniqueVariables = Array.from(foundVariables);
-		setVariables(uniqueVariables);
+	// 	// biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+	// 	while ((match = regex.exec(originalPrompt)) !== null) {
+	// 		foundVariables.add(match[1]);
+	// 	}
 
-		// Initialize variable values for new variables and remove old ones
-		setVariableValues((prev) => {
-			const newVariableValues = { ...prev };
+	// 	const uniqueVariables = Array.from(foundVariables);
+	// 	setVariables(uniqueVariables);
 
-			// Add new variables
-			uniqueVariables.forEach((variable) => {
-				if (!(variable in newVariableValues)) {
-					newVariableValues[variable] = "";
-				}
-			});
+	// 	// Initialize variable values for new variables and remove old ones
+	// 	setVariableValues((prev) => {
+	// 		const newVariableValues = { ...prev };
 
-			// Remove values for variables that no longer exist
-			Object.keys(newVariableValues).forEach((variable) => {
-				if (!uniqueVariables.includes(variable)) {
-					delete newVariableValues[variable];
-				}
-			});
+	// 		// Add new variables
+	// 		uniqueVariables.forEach((variable) => {
+	// 			if (!(variable in newVariableValues)) {
+	// 				newVariableValues[variable] = "";
+	// 			}
+	// 		});
 
-			return newVariableValues;
-		});
-	}, [originalPrompt]);
+	// 		// Remove values for variables that no longer exist
+	// 		Object.keys(newVariableValues).forEach((variable) => {
+	// 			if (!uniqueVariables.includes(variable)) {
+	// 				delete newVariableValues[variable];
+	// 			}
+	// 		});
+
+	// 		return newVariableValues;
+	// 	});
+	// }, [originalPrompt]);
 
 	// Generate the final prompt by replacing variables with their values
 	useEffect(() => {
