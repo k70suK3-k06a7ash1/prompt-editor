@@ -1,13 +1,15 @@
 import { useLiveQuery, usePGlite } from "@electric-sql/pglite-react";
 import { Copy, History, RotateCcw, Save, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
 import { useGeneratePrompt } from "@/hooks/use-generate-prompt";
+import { PromptRepository } from "@/repositories";
 import type { PromptVersion } from "@/types";
 
 const PromptEditor = () => {
 	const db = usePGlite();
+	const promptRepository = useMemo(() => new PromptRepository(db), [db]);
 	const [originalPrompt, setOriginalPrompt] = useState("");
 	const [variables, setVariables] = useState<string[]>([]);
 	const [variableValues, setVariableValues] = useState<Record<string, string>>(
@@ -60,10 +62,7 @@ const PromptEditor = () => {
 		const title = promptTitle.trim() || `Prompt ${new Date().toLocaleString()}`;
 
 		try {
-			await db.query(
-				"INSERT INTO prompt_versions (title, original_prompt, variable_values) VALUES ($1, $2, $3)",
-				[title, originalPrompt, JSON.stringify(variableValues)],
-			);
+			await promptRepository.savePrompt(title, originalPrompt, variableValues);
 			toast.success("Prompt saved successfully!");
 			setPromptTitle("");
 		} catch (err) {
@@ -80,7 +79,7 @@ const PromptEditor = () => {
 
 	const deletePromptVersion = async (id: number, title: string) => {
 		try {
-			await db.query("DELETE FROM prompt_versions WHERE id = $1", [id]);
+			await promptRepository.deletePrompt(id);
 			toast.success(`Deleted: ${title}`);
 		} catch (err) {
 			console.error("Failed to delete prompt:", err);
