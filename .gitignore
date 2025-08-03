@@ -15,6 +15,9 @@ dist-ssr
 # Test coverage
 coverage
 
+# Serena cache
+.serena/cache
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
