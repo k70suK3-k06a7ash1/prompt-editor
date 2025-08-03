@@ -22,6 +22,7 @@ async function initializeApp() {
 
 	try {
 		const db = await PGlite.create({
+			dataDir: "idb://prompt-editor-db",
 			extensions: { live },
 		});
 
