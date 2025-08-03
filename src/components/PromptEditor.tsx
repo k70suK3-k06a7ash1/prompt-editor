@@ -1,9 +1,11 @@
 import { useLiveQuery, usePGlite } from "@electric-sql/pglite-react";
-import { Copy, History, RotateCcw, Save, Trash2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Clock, Copy, History, RotateCcw, Save, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
 import { useGeneratePrompt } from "@/hooks/use-generate-prompt";
+import { useSessionPersistence } from "@/hooks/use-session-persistence";
 import { PromptRepository } from "@/repositories";
 import type { PromptVersion } from "@/types";
 
@@ -27,6 +29,28 @@ const PromptEditor = () => {
 	useExtractVariables({ originalPrompt, setVariables, setVariableValues });
 	useGeneratePrompt({ originalPrompt, variableValues, setGeneratedPrompt });
 
+	// Session persistence - saves to sessionStorage automatically
+	const { clearSessionData } = useSessionPersistence({
+		originalPrompt,
+		variableValues,
+		promptTitle,
+		setOriginalPrompt,
+		setVariableValues,
+		setPromptTitle,
+		autoSaveEnabled: true,
+		debounceMs: 1000,
+	});
+
+	// Auto-save to database - creates auto-save entries
+	const { saveStatus, lastSavedAt, clearAutoSave, purgeAllAutoSaves, isAutoSave } = useAutoSave({
+		originalPrompt,
+		variableValues,
+		promptRepository,
+		enabled: true,
+		debounceMs: 3000,
+		minContentLength: 10,
+	});
+
 	const handleVariableChange = (variable: string, value: string) => {
 		setVariableValues((prev) => ({
 			...prev,
@@ -39,6 +63,9 @@ const PromptEditor = () => {
 		setVariables([]);
 		setVariableValues({});
 		setGeneratedPrompt("");
+		setPromptTitle("");
+		clearSessionData();
+		clearAutoSave();
 	};
 
 	const copyToClipboard = async () => {
@@ -64,7 +91,17 @@ const PromptEditor = () => {
 		try {
 			await promptRepository.savePrompt(title, originalPrompt, variableValues);
 			toast.success("Prompt saved successfully!");
+			
+			// Reset all form fields after successful save
 			setPromptTitle("");
+			setOriginalPrompt("");
+			setVariables([]);
+			setVariableValues({});
+			setGeneratedPrompt("");
+			
+			// Clear session data and purge all auto-saves
+			clearSessionData();
+			await purgeAllAutoSaves();
 		} catch (err) {
 			console.error("Failed to save prompt:", err);
 			toast.error("Failed to save prompt");
@@ -139,65 +176,169 @@ const PromptEditor = () => {
 					{/* History Section */}
 					{showHistory && (
 						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-							<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-								Prompt History ({promptVersions?.rows?.length || 0})
-							</h2>
-							{promptVersions?.rows && promptVersions.rows.length > 0 ? (
-								<div className="space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
-									{promptVersions.rows.map((version: PromptVersion) => (
-										<div
-											key={version.id}
-											className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-md gap-3 sm:gap-0"
-										>
-											<div className="flex-1 min-w-0">
-												<h3 className="font-medium text-gray-900 truncate">
-													{version.title}
+							{(() => {
+								const savedPrompts =
+									promptVersions?.rows?.filter((v) => !isAutoSave(v.title)) ||
+									[];
+								const autoSaves =
+									promptVersions?.rows?.filter((v) => isAutoSave(v.title)) ||
+									[];
+
+								return (
+									<>
+										<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
+											Saved Prompts ({savedPrompts.length})
+											{autoSaves.length > 0 && (
+												<span className="text-sm font-normal text-gray-500 ml-2">
+													+ {autoSaves.length} auto-save
+													{autoSaves.length !== 1 ? "s" : ""}
+												</span>
+											)}
+										</h2>
+
+										{/* Saved Prompts */}
+										{savedPrompts.length > 0 ? (
+											<div className="space-y-3 max-h-64 sm:max-h-80 overflow-y-auto mb-4">
+												{savedPrompts.map((version: PromptVersion) => (
+													<div
+														key={version.id}
+														className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-md gap-3 sm:gap-0"
+													>
+														<div className="flex-1 min-w-0">
+															<h3 className="font-medium text-gray-900 truncate">
+																{version.title}
+															</h3>
+															<p className="text-sm text-gray-500 truncate">
+																{version.original_prompt}
+															</p>
+															<p className="text-xs text-gray-400">
+																{new Date(version.created_at).toLocaleString()}
+															</p>
+														</div>
+														<div className="flex gap-2 shrink-0">
+															<button
+																type="button"
+																onClick={() => loadPromptVersion(version)}
+																className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
+															>
+																Load
+															</button>
+															<button
+																type="button"
+																onClick={() =>
+																	deletePromptVersion(version.id, version.title)
+																}
+																className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors"
+															>
+																<Trash2 size={12} />
+															</button>
+														</div>
+													</div>
+												))}
+											</div>
+										) : (
+											<p className="text-gray-500 text-center py-4">
+												No saved prompts yet
+											</p>
+										)}
+
+										{/* Auto-saves */}
+										{autoSaves.length > 0 && (
+											<>
+												<h3 className="text-sm font-semibold text-gray-700 mb-2 border-t pt-4">
+													Auto-saves (Recent drafts)
 												</h3>
-												<p className="text-sm text-gray-500 truncate">
-													{version.original_prompt}
-												</p>
-												<p className="text-xs text-gray-400">
-													{new Date(version.created_at).toLocaleString()}
-												</p>
-											</div>
-											<div className="flex gap-2 shrink-0">
-												<button
-													type="button"
-													onClick={() => loadPromptVersion(version)}
-													className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
-												>
-													Load
-												</button>
-												<button
-													type="button"
-													onClick={() =>
-														deletePromptVersion(version.id, version.title)
-													}
-													className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors"
-												>
-													<Trash2 size={12} />
-												</button>
-											</div>
-										</div>
-									))}
-								</div>
-							) : (
-								<p className="text-gray-500 text-center py-4">
-									No saved prompts yet
-								</p>
-							)}
+												<div className="space-y-2 max-h-32 overflow-y-auto">
+													{autoSaves
+														.slice(0, 3)
+														.map((version: PromptVersion) => (
+															<div
+																key={version.id}
+																className="flex flex-col sm:flex-row sm:items-center justify-between p-2 bg-yellow-50 rounded-md gap-2 sm:gap-0 border border-yellow-200"
+															>
+																<div className="flex-1 min-w-0">
+																	<p className="text-xs text-gray-600 truncate">
+																		{version.original_prompt}
+																	</p>
+																	<p className="text-xs text-gray-400">
+																		{new Date(
+																			version.created_at,
+																		).toLocaleString()}
+																	</p>
+																</div>
+																<div className="flex gap-1 shrink-0">
+																	<button
+																		type="button"
+																		onClick={() => loadPromptVersion(version)}
+																		className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded hover:bg-blue-200 transition-colors"
+																	>
+																		Restore
+																	</button>
+																	<button
+																		type="button"
+																		onClick={() =>
+																			deletePromptVersion(
+																				version.id,
+																				version.title,
+																			)
+																		}
+																		className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded hover:bg-red-200 transition-colors"
+																	>
+																		<Trash2 size={10} />
+																	</button>
+																</div>
+															</div>
+														))}
+												</div>
+											</>
+										)}
+									</>
+								);
+							})()}
 						</div>
 					)}
 
 					{/* Prompt Input Section */}
 					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
 						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
-							<label
-								htmlFor="original-prompt"
-								className="block text-base sm:text-lg font-semibold text-gray-900"
-							>
-								System Prompt
-							</label>
+							<div className="flex items-center gap-3">
+								<label
+									htmlFor="original-prompt"
+									className="block text-base sm:text-lg font-semibold text-gray-900"
+								>
+									System Prompt
+								</label>
+								{/* Save Status Indicator */}
+								{saveStatus !== "idle" && (
+									<div className="flex items-center gap-1 text-xs">
+										{saveStatus === "saving" && (
+											<>
+												<Clock
+													size={12}
+													className="animate-spin text-blue-500"
+												/>
+												<span className="text-blue-600">Auto-saving...</span>
+											</>
+										)}
+										{saveStatus === "saved" && (
+											<>
+												<Clock size={12} className="text-green-500" />
+												<span className="text-green-600">
+													Saved{" "}
+													{lastSavedAt &&
+														new Date(lastSavedAt).toLocaleTimeString()}
+												</span>
+											</>
+										)}
+										{saveStatus === "error" && (
+											<>
+												<Clock size={12} className="text-red-500" />
+												<span className="text-red-600">Save failed</span>
+											</>
+										)}
+									</div>
+								)}
+							</div>
 							<button
 								type="button"
 								onClick={resetPrompt}
