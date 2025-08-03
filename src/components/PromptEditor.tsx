@@ -123,6 +123,21 @@ const PromptEditor = () => {
 			toast.error("Failed to delete prompt");
 		}
 	};
+	const deleteAllSavedPrompts = async () => {
+		const confirmed = window.confirm(
+			"Are you sure you want to delete ALL saved prompts? This action cannot be undone.",
+		);
+
+		if (!confirmed) return;
+
+		try {
+			await promptRepository.deleteAllSavedPrompts();
+			toast.success("All saved prompts deleted successfully!");
+		} catch (err) {
+			console.error("Failed to delete all saved prompts:", err);
+			toast.error("Failed to delete all saved prompts");
+		}
+	};
 
 	const examplePrompt =
 		"Hello, my name is $\{name}. I am $\{age} years old and I work as a $\{job}. I live in $\{city}.";
@@ -186,15 +201,27 @@ const PromptEditor = () => {
 
 								return (
 									<>
-										<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-											Saved Prompts ({savedPrompts.length})
-											{autoSaves.length > 0 && (
-												<span className="text-sm font-normal text-gray-500 ml-2">
-													+ {autoSaves.length} auto-save
-													{autoSaves.length !== 1 ? "s" : ""}
-												</span>
+										<div className="flex items-center justify-between mb-4">
+											<h2 className="text-base sm:text-lg font-semibold text-gray-900">
+												Saved Prompts ({savedPrompts.length})
+												{autoSaves.length > 0 && (
+													<span className="text-sm font-normal text-gray-500 ml-2">
+														+ {autoSaves.length} auto-save
+														{autoSaves.length !== 1 ? "s" : ""}
+													</span>
+												)}
+											</h2>
+											{savedPrompts.length > 0 && (
+												<button
+													type="button"
+													onClick={deleteAllSavedPrompts}
+													className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition-colors"
+												>
+													<Trash2 size={12} />
+													Delete All
+												</button>
 											)}
-										</h2>
+										</div>
 
 										{/* Saved Prompts */}
 										{savedPrompts.length > 0 ? (

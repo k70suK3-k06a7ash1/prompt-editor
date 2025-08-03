@@ -41,6 +41,12 @@ export class PromptRepository {
 		);
 	}
 
+	async deleteAllSavedPrompts(): Promise<void> {
+		await this.db.query(
+			"DELETE FROM prompt_versions WHERE title NOT LIKE '[Auto-save]%'",
+		);
+	}
+
 	async getAllPrompts(): Promise<PromptVersion[]> {
 		const result = await this.db.query<PromptVersion>(
 			"SELECT * FROM prompt_versions ORDER BY created_at DESC",
