@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { useExtractVariables } from "@/hooks/use-extract-variables";
 import { useGeneratePrompt } from "@/hooks/use-generate-prompt";
+import { useGenerateMultiPrompts } from "@/hooks/use-generate-multi-prompts";
 import { useSessionPersistence } from "@/hooks/use-session-persistence";
 import { PromptRepository } from "@/repositories";
 import type { PromptVersion } from "@/types";
@@ -18,6 +19,7 @@ const PromptEditor = () => {
 		{},
 	);
 	const [generatedPrompt, setGeneratedPrompt] = useState("");
+	const [generatedPrompts, setGeneratedPrompts] = useState<string[]>([]);
 	const [promptTitle, setPromptTitle] = useState("");
 	const [showHistory, setShowHistory] = useState(false);
 
@@ -28,6 +30,7 @@ const PromptEditor = () => {
 
 	useExtractVariables({ originalPrompt, setVariables, setVariableValues });
 	useGeneratePrompt({ originalPrompt, variableValues, setGeneratedPrompt });
+	useGenerateMultiPrompts({ originalPrompt, variableValues, setGeneratedPrompts });
 
 	// Session persistence - saves to sessionStorage automatically
 	const { clearSessionData } = useSessionPersistence({
@@ -63,16 +66,18 @@ const PromptEditor = () => {
 		setVariables([]);
 		setVariableValues({});
 		setGeneratedPrompt("");
+			setGeneratedPrompts([]);
 		setPromptTitle("");
 		clearSessionData();
 		clearAutoSave();
 	};
 
-	const copyToClipboard = async () => {
-		if (!generatedPrompt) return;
+	const copyToClipboard = async (promptText?: string) => {
+		const textToCopy = promptText || generatedPrompt;
+		if (!textToCopy) return;
 
 		try {
-			await navigator.clipboard.writeText(generatedPrompt);
+			await navigator.clipboard.writeText(textToCopy);
 			toast.success("Prompt copied to clipboard!");
 		} catch (err) {
 			console.error("Failed to copy text: ", err);
@@ -98,6 +103,7 @@ const PromptEditor = () => {
 			setVariables([]);
 			setVariableValues({});
 			setGeneratedPrompt("");
+			setGeneratedPrompts([]);
 			
 			// Clear session data and purge all auto-saves
 			clearSessionData();
@@ -392,9 +398,14 @@ const PromptEditor = () => {
 					{/* Variable Input Section */}
 					{variables.length > 0 && (
 						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-							<h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-								Variables ({variables.length})
-							</h2>
+							<div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-2">
+								<h2 className="text-base sm:text-lg font-semibold text-gray-900">
+									Variables ({variables.length})
+								</h2>
+								<div className="text-sm text-gray-600">
+									💡 Use commas to create multiple prompts: "value1,value2,value3"
+								</div>
+							</div>
 							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 								{variables.map((variable) => (
 									<div key={variable} className="space-y-2">
@@ -421,30 +432,66 @@ const PromptEditor = () => {
 					)}
 
 					{/* Generated Prompt Section */}
-					<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-						<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
-							<h2 className="text-base sm:text-lg font-semibold text-gray-900">
-								Generated Prompt
-							</h2>
-							<button
-								type="button"
-								onClick={copyToClipboard}
-								disabled={!generatedPrompt}
-								className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start sm:self-auto"
-							>
-								<Copy size={16} />
-								Copy
-							</button>
+					{generatedPrompts.length > 1 ? (
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+							<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
+								<h2 className="text-base sm:text-lg font-semibold text-gray-900">
+									Generated Prompts ({generatedPrompts.length})
+								</h2>
+								<div className="text-sm text-gray-600">
+									Multiple values detected - showing all combinations
+								</div>
+							</div>
+							<div className="space-y-4 max-h-96 overflow-y-auto">
+								{generatedPrompts.map((prompt, index) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+<div key={index} className="bg-gray-50 rounded-md p-3 sm:p-4 border border-gray-200">
+										<div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2 sm:gap-0">
+											<span className="text-sm font-medium text-gray-700">
+												Prompt #{index + 1}
+											</span>
+											<button
+												type="button"
+												onClick={() => copyToClipboard(prompt)}
+												className="flex items-center justify-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-200 border border-gray-300 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors whitespace-nowrap self-start sm:self-auto"
+											>
+												<Copy size={14} />
+												Copy
+											</button>
+										</div>
+										<pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-900 font-mono leading-relaxed">
+											{prompt}
+										</pre>
+									</div>
+								))}
+							</div>
 						</div>
-						<div className="bg-gray-50 rounded-md p-3 sm:p-4 min-h-[120px] sm:min-h-[150px] border border-gray-200">
-							<pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-900 font-mono leading-relaxed">
-								{generatedPrompt ||
-									(originalPrompt
-										? "Enter values for variables to see the generated prompt..."
-										: "Enter a system prompt above to get started...")}
-							</pre>
+					) : (
+						<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+							<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 sm:gap-0">
+								<h2 className="text-base sm:text-lg font-semibold text-gray-900">
+									Generated Prompt
+								</h2>
+								<button
+									type="button"
+									onClick={() => copyToClipboard()}
+									disabled={!generatedPrompt}
+									className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start sm:self-auto"
+								>
+									<Copy size={16} />
+									Copy
+								</button>
+							</div>
+							<div className="bg-gray-50 rounded-md p-3 sm:p-4 min-h-[120px] sm:min-h-[150px] border border-gray-200">
+								<pre className="whitespace-pre-wrap text-xs sm:text-sm text-gray-900 font-mono leading-relaxed">
+									{generatedPrompt ||
+										(originalPrompt
+											? "Enter values for variables to see the generated prompt..."
+											: "Enter a system prompt above to get started...")}
+								</pre>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 			</div>
 		</div>
