@@ -28,6 +28,7 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
 - `make act-test-verbose` - Run with verbose output for debugging
 - `make act-list` - List all available GitHub Actions jobs
 - `make act-dry` - Perform a dry run without executing
+- `make act-clean` - Clean up Docker resources after testing
 
 ## Architecture
 
@@ -35,7 +36,11 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
 - **src/main.tsx**: Application entry point with PGlite database initialization
 - **src/App.tsx**: Simple wrapper that renders PromptEditor
 - **src/components/PromptEditor.tsx**: Main application component with all functionality
+- **src/repositories/PromptRepository.ts**: Database operations layer for prompt management
 - **src/hooks/use-extract-variables.ts**: Custom hook for variable extraction logic
+- **src/hooks/use-auto-save.ts**: Auto-save functionality with debouncing
+- **src/hooks/use-generate-multi-prompts.ts**: Multi-prompt generation from comma-separated values
+- **src/hooks/use-session-persistence.ts**: Session storage for data persistence
 - **src/types.ts**: TypeScript interfaces (PromptVersion)
 
 ### Key Features Implementation
@@ -49,8 +54,25 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
    - In-browser PostgreSQL database for prompt storage
    - Table: `prompt_versions` with title, original_prompt, variable_values (JSONB), timestamps
    - Real-time queries with `useLiveQuery` for history display
+   - Repository pattern via `PromptRepository` class for data operations
 
-3. **UI Sections**:
+3. **Auto-Save System**:
+   - Uses `useAutoSave` hook with configurable debouncing (default 2000ms)
+   - Automatically saves prompts with "[Auto-save]" prefix
+   - Updates existing auto-saves instead of creating duplicates
+   - Status indicators: idle, saving, saved, error
+
+4. **Multi-Prompt Generation**:
+   - Uses `useGenerateMultiPrompts` hook for comma-separated variable values
+   - Generates cartesian product of all variable combinations
+   - Supports batch prompt generation from single template
+
+5. **Session Persistence**:
+   - Uses `useSessionPersistence` hook for browser session storage
+   - Auto-restores work on page refresh (within 24 hours)
+   - Saves data before page unload to prevent loss
+
+6. **UI Sections**:
    - Save/Load prompt functionality with history
    - System prompt input textarea
    - Dynamic variable input fields (responsive grid)
@@ -82,14 +104,36 @@ This is a React + TypeScript + Vite application for editing prompts with dynamic
   - Updates variables array and values object
   - Handles cleanup of removed variables
 
+- **useAutoSave**: Automatic prompt saving with debouncing
+  - Configurable save interval and minimum content length
+  - Creates/updates auto-save entries with timestamp prefixes
+  - Provides save status tracking and manual save capability
+
+- **useGenerateMultiPrompts**: Multi-prompt generation from variable combinations
+  - Parses comma-separated values in variable inputs
+  - Generates cartesian product of all variable combinations
+  - Returns array of generated prompts for batch operations
+
+- **useSessionPersistence**: Browser session storage management
+  - Auto-saves form state to sessionStorage with debouncing
+  - Restores session data on page load (24-hour expiry)
+  - Handles page unload events to prevent data loss
+
+- **useGeneratePrompt**: Single prompt generation with variable substitution
+  - Replaces `${variable}` patterns with user-provided values
+  - Maintains original placeholder format for empty values
+
 ## Development Notes
 
 - Database schema auto-initializes on app startup
+- Repository pattern implemented for data layer separation (`PromptRepository`)
 - Tests configured with Vitest and Testing Library
 - Path alias `@/` points to `src/` directory
 - Build output goes to `dist/` with base path `/prompt-editor/`
 - Biome configured with tab indentation and double quotes
 - PGlite requires special Vite optimization exclusion
+- Auto-save and session persistence work independently for data resilience
+- Multi-prompt generation supports complex variable combinations
 - Lefthook configuration available but currently contains only examples
 - Uses act for local GitHub Actions testing (requires Docker)
 
